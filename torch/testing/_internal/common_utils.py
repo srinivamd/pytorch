@@ -1269,6 +1269,7 @@ def xfailIfTorchDynamo(func):
 
 
 def skipIfTorchDynamo(msg="test doesn't currently work with dynamo"):
+    # useless change
     def decorator(fn):
         if not isinstance(fn, type):
             @wraps(fn)
