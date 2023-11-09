@@ -1627,8 +1627,18 @@ class Scan(Loops):
             scan_numel=scan_numel,
         )
         if num_splits > 1:
-            # TODO: Support splitting
-            return None
+            if combine_fn != ops.add:
+                # TODO: Generalize split_cumsum to split_scan
+                return None
+            from torch._inductor.kernel.scan import split_cumsum
+
+            x = Pointwise.create(
+                device=device,
+                dtype=dtype,
+                inner_fn=inner_fn,
+                ranges=size,
+            )
+            return split_cumsum(x, axis)
 
         def reindex(index, scan_index):
             assert len(scan_index) == len(scan_ranges)
