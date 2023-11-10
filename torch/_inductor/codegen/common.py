@@ -1000,9 +1000,8 @@ class Kernel(CodeGen):
                 return inner
 
             @staticmethod
-            def indirect_indexing(var, size, check=True):
+            def _indirect_to_direct_index(var, size):
                 # Skip CSE since this doesn't return an expression
-
                 if var.bounds.lower < 0:
                     new_bounds = ValueRanges.unknown()
                     if var.bounds != ValueRanges.unknown() and isinstance(
@@ -1019,6 +1018,9 @@ class Kernel(CodeGen):
                             new_bounds = new_bounds | pos
 
                     stm = ops.add(var, self.rename_indexing(size))
+                    # ops.add don't propagate the bounds
+                    stm.value.bounds = new_bounds
+
                     # Mixed negative and non-negative
                     if var.bounds.upper >= 0:
                         lt = ops.lt(var, "0")
@@ -1027,8 +1029,13 @@ class Kernel(CodeGen):
 
                     new_var.update_on_args("index_wrap", (var,), {})
                     var = new_var
+                return var
 
-                if self.generate_assert(check):
+            @staticmethod
+            def check_bounds(var, size):
+                var = CSEProxy._indirect_to_direct_index(var, size)
+
+                if self.generate_assert(True):
                     mask = self.load_mask(var)
 
                     # An assertion line may have been written already, if so just
@@ -1054,6 +1061,10 @@ class Kernel(CodeGen):
                         )
 
                     self.indirect_max_sizes[map_key] = (size, self.index_to_str(size))  # type: ignore[attr-defined]
+
+            @staticmethod
+            def indirect_indexing(var, size, check=True):
+                var = CSEProxy._indirect_to_direct_index(var, size)
                 return sympy_symbol(str(var))
 
             @staticmethod
