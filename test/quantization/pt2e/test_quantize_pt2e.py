@@ -1606,6 +1606,16 @@ class TestQuantizePT2E(PT2EQuantizationTestCase):
             qconfig_mapping,
         )
 
+    def _get_dropout_node(self, m: torch.fx.GraphModule):
+        """
+        Return the first dropout node in the model, throwing an exception
+        if no such dropout node is found.
+        """
+        for n in m.graph.nodes:
+            if n.target == torch.ops.aten.native_dropout.default:
+                return n
+        raise ValueError("Did not find dropout node")
+
     def test_move_exported_model_to_eval(self):
         class M(torch.nn.Module):
             def __init__(self):
@@ -1620,21 +1630,15 @@ class TestQuantizePT2E(PT2EQuantizationTestCase):
         m = capture_pre_autograd_graph(m, example_inputs)
 
         # Assert that dropout op exists and is in train mode
-        dropout_node = None
-        for n in m.graph.nodes:
-            if n.target == torch.ops.aten.native_dropout.default:
-                dropout_node = n
-                break
-        self.assertTrue(dropout_node is not None)
+        dropout_node = self._get_dropout_node(m)
         self.assertTrue(dropout_node.args[2])
 
         # Do the subgraph rewriting
         torch.ao.quantization.move_exported_model_to_eval(m)
 
-        # Assert that dropout op is now replaced with a clone op
-        targets = [n.target for n in m.graph.nodes]
-        self.assertTrue(torch.ops.aten.clone.default in targets)
-        self.assertTrue(torch.ops.aten.native_dropout.default not in targets)
+        # Assert that dropout op exists and is in eval mode
+        dropout_node = self._get_dropout_node(m)
+        self.assertFalse(dropout_node.args[2])
 
     def test_disallow_eval_train(self):
         m = TestHelperModules.ConvWithBNRelu(relu=True)
