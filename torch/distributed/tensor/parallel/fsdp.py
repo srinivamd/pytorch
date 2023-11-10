@@ -226,8 +226,9 @@ def _chunk_dtensor(
     device_mesh: DeviceMesh,
 ) -> DTensor:
     """
-    Shard a tensor to chunks along the first dimension. The local rank will gets its
-    corresponding chunk as the local tensor to create a DTensor.
+    Shard a tensor to chunks along the first dimension.
+
+    The local rank will gets its corresponding chunk as the local tensor to create a DTensor.
     """
     parent_mesh = _mesh_resources.get_parent_mesh(device_mesh)
     if parent_mesh is None:
@@ -298,9 +299,7 @@ def _all_gather_dtensor(
     tensor: DTensor,
     parent_mesh: Optional[DeviceMesh],
 ) -> torch.Tensor:
-    """
-    All gather a DTensor in its FSDP dimension and return the local tensor.
-    """
+    """All gather a DTensor in its FSDP dimension and return the local tensor."""
     assert parent_mesh == tensor.device_mesh
 
     placements = list(copy.deepcopy(tensor.placements))
@@ -317,6 +316,7 @@ def _all_gather_dtensor(
 class DTensorExtensions(FSDPExtensions):
     """
     DTensorExtension is the TensorFlattener extension needed for 2D FSDP + TP.
+
     This is the implementation for FSDPExtensions defined in
     https://github.com/pytorch/pytorch/blob/main/torch/distributed/fsdp/_fsdp_extensions.py
     """
