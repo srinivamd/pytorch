@@ -8,6 +8,7 @@ import torch
 import unittest
 import itertools
 import weakref
+import os
 
 from torch.testing import make_tensor
 from torch.testing._comparison import default_tolerances
@@ -175,6 +176,12 @@ class TestForeach(TestCase):
                     ref([ref_input, *sample.ref_args], **ref_kwargs)
             else:
                 expected = ref([ref_input, *sample.ref_args], **ref_kwargs)
+                print('ionut3')
+                env_vars = os.environ
+
+                # Print each environment variable
+                for key, value in env_vars.items():
+                    print(f"{key}: {value}")
                 self.assertEqual(expected, actual)
 
     def _binary_test(
