@@ -55,6 +55,21 @@ def is_same_size_handler(
     return lhs.shape == rhs.shape
 
 
+def detach_handler(
+    op_call: torch._ops.OpOverload,
+    args: Tuple[object, ...],
+    kwargs: Dict[str, object],
+) -> object:
+    """
+    directly wrap a new DTensor with the input DTensor's local_shard and spec, this
+    this because detach only relates to autograd and we don't need to run local
+    compute or sharding propagation here (and since we safely maintain local tensor
+    and wrapper autograd via `view_as`, it's safe to directly re-wrap)
+    """
+    dt = cast(dtensor.DTensor, args[0])
+    return OpDispatcher.wrap(dt._local_tensor, dt._spec)
+
+
 class OpDispatcher:
     """
     Op dispatching class instance to handle args/kwargs pre-processing (un-wrapping), sharding
@@ -77,6 +92,7 @@ class OpDispatcher:
         self._custom_op_handlers = {
             aten.linear.default: decompose_handler,
             aten.is_same_size.default: is_same_size_handler,
+            aten.detach.default: detach_handler,
         }
 
     def dispatch(
