@@ -253,7 +253,7 @@ void map_block(
       0ULL));
 
   hipMemAccessDesc desc;
-      size,
+  desc.location.type = hipMemLocationTypeDevice;
       0,
       reinterpret_cast<hipMemGenericAllocationHandle_t>(handle),
       0ULL));
