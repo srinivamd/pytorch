@@ -258,7 +258,7 @@ void map_block(
   desc.location.id = static_cast<int>(device_idx);
   desc.flags = hipMemAccessFlagsProtReadWrite;
   C10_CUDA_CHECK(hipMemSetAccess(*ptr, size, &desc, 1));
-  hipMemAccessDesc desc;
+#else
   desc.location.type = hipMemLocationTypeDevice;
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   desc.location.id = static_cast<int>(device_idx);
