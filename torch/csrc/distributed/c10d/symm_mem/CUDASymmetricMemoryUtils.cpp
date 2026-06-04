@@ -254,10 +254,10 @@ void map_block(
 
   hipMemAccessDesc desc;
   desc.location.type = hipMemLocationTypeDevice;
-      0,
-      reinterpret_cast<hipMemGenericAllocationHandle_t>(handle),
-      0ULL));
-
+  // NOLINTNEXTLINE(bugprone-signed-char-misuse)
+  desc.location.id = static_cast<int>(device_idx);
+  desc.flags = hipMemAccessFlagsProtReadWrite;
+  C10_CUDA_CHECK(hipMemSetAccess(*ptr, size, &desc, 1));
   hipMemAccessDesc desc;
   desc.location.type = hipMemLocationTypeDevice;
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
