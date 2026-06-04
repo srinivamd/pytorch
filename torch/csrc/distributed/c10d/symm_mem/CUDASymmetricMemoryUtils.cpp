@@ -72,7 +72,7 @@ IpcChannel::~IpcChannel() {
 }
 
 void IpcChannel::send_fd(int dst_pid, int fd) {
-  // Because file descriptors are process-local kernel objects, and we can’t
+  // Because file descriptors are process-local kernel objects, and we can't
   // pass them via normal socket payloads (like write() or send()).  Unix domain
   // sockets provide a mechanism to pass actual FDs via sendmsg()/recvmsg().
   // Define destination socket address
@@ -253,12 +253,6 @@ void map_block(
       0ULL));
 
   hipMemAccessDesc desc;
-  desc.location.type = hipMemLocationTypeDevice;
-  // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  desc.location.id = static_cast<int>(device_idx);
-  desc.flags = hipMemAccessFlagsProtReadWrite;
-  C10_CUDA_CHECK(hipMemSetAccess(*ptr, size, &desc, 1));
-#else
   desc.location.type = hipMemLocationTypeDevice;
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   desc.location.id = static_cast<int>(device_idx);
